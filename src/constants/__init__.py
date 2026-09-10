@@ -1,15 +1,17 @@
 import os
 from datetime import date
 
-# For MongoDB connection
-DATABASE_NAME = "Proj1"
-COLLECTION_NAME = "Proj1-Data"
+DATABASE_NAME = "vehicle_insurance"
+DB_NAME = DATABASE_NAME  # Backwards-compatible alias.
+COLLECTION_NAME = "vehicle_insurance_data"
 MONGODB_URL_KEY = "MONGODB_URL"
+LOCAL_DATA_FILE_PATH = os.path.join("notebook", "data.csv")
 
-PIPELINE_NAME: str = ""
+PIPELINE_NAME: str = "vehicle_insurance"
 ARTIFACT_DIR: str = "artifact"
 
 MODEL_FILE_NAME = "model.pkl"
+LOCAL_MODEL_FILE_PATH = MODEL_FILE_NAME
 
 TARGET_COLUMN = "Response"
 CURRENT_YEAR = date.today().year
@@ -56,7 +58,7 @@ MODEL_TRAINER_TRAINED_MODEL_DIR: str = "trained_model"
 MODEL_TRAINER_TRAINED_MODEL_NAME: str = "model.pkl"
 MODEL_TRAINER_EXPECTED_SCORE: float = 0.6
 MODEL_TRAINER_MODEL_CONFIG_FILE_PATH: str = os.path.join("config", "model.yaml")
-MODEL_TRAINER_N_ESTIMATORS=200
+MODEL_TRAINER_N_ESTIMATORS=50
 MODEL_TRAINER_MIN_SAMPLES_SPLIT: int = 7
 MODEL_TRAINER_MIN_SAMPLES_LEAF: int = 6
 MIN_SAMPLES_SPLIT_MAX_DEPTH: int = 10

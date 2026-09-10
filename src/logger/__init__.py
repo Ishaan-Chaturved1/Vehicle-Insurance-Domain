@@ -1,8 +1,8 @@
 import logging
 import os
 from logging.handlers import RotatingFileHandler
-from from_root import from_root
 from datetime import datetime
+from pathlib import Path
 
 # Constants for log configuration
 LOG_DIR = 'logs'
@@ -11,7 +11,7 @@ MAX_LOG_SIZE = 5 * 1024 * 1024  # 5 MB
 BACKUP_COUNT = 3  # Number of backup log files to keep
 
 # Construct log file path
-log_dir_path = os.path.join(from_root(), LOG_DIR)
+log_dir_path = str(Path(__file__).resolve().parents[2] / LOG_DIR)
 os.makedirs(log_dir_path, exist_ok=True)
 log_file_path = os.path.join(log_dir_path, LOG_FILE)
 
@@ -19,9 +19,12 @@ def configure_logger():
     """
     Configures logging with a rotating file handler and a console handler.
     """
-    # Create a custom logger
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
+    # Imports happen in worker processes and test runners as well; do not add
+    # duplicate handlers every time this module is imported.
+    if logger.handlers:
+        return
     
     # Define formatter
     formatter = logging.Formatter("[ %(asctime)s ] %(name)s - %(levelname)s - %(message)s")

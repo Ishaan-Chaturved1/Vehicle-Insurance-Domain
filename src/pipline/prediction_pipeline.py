@@ -1,8 +1,11 @@
 import sys
+import os
 from src.entity.config_entity import VehiclePredictorConfig
 from src.entity.s3_estimator import Proj1Estimator
 from src.exception import MyException
 from src.logger import logging
+from src.constants import LOCAL_MODEL_FILE_PATH
+from src.utils.main_utils import load_object
 from pandas import DataFrame
 
 
@@ -16,9 +19,8 @@ class VehicleData:
                 Annual_Premium,
                 Policy_Sales_Channel,
                 Vintage,
-                Vehicle_Age_lt_1_Year,
-                Vehicle_Age_gt_2_Years,
-                Vehicle_Damage_Yes
+                Vehicle_Age,
+                Vehicle_Damage,
                 ):
         """
         Vehicle Data constructor
@@ -33,9 +35,8 @@ class VehicleData:
             self.Annual_Premium = Annual_Premium
             self.Policy_Sales_Channel = Policy_Sales_Channel
             self.Vintage = Vintage
-            self.Vehicle_Age_lt_1_Year = Vehicle_Age_lt_1_Year
-            self.Vehicle_Age_gt_2_Years = Vehicle_Age_gt_2_Years
-            self.Vehicle_Damage_Yes = Vehicle_Damage_Yes
+            self.Vehicle_Age = Vehicle_Age
+            self.Vehicle_Damage = Vehicle_Damage
 
         except Exception as e:
             raise MyException(e, sys) from e
@@ -57,7 +58,7 @@ class VehicleData:
         """
         This function returns a dictionary from VehicleData class input
         """
-        logging.info("Entered get_usvisa_data_as_dict method as VehicleData class")
+        logging.info("Entered get_vehicle_data_as_dict method as VehicleData class")
 
         try:
             input_data = {
@@ -69,9 +70,8 @@ class VehicleData:
                 "Annual_Premium": [self.Annual_Premium],
                 "Policy_Sales_Channel": [self.Policy_Sales_Channel],
                 "Vintage": [self.Vintage],
-                "Vehicle_Age_lt_1_Year": [self.Vehicle_Age_lt_1_Year],
-                "Vehicle_Age_gt_2_Years": [self.Vehicle_Age_gt_2_Years],
-                "Vehicle_Damage_Yes": [self.Vehicle_Damage_Yes]
+                "Vehicle_Age": [self.Vehicle_Age],
+                "Vehicle_Damage": [self.Vehicle_Damage],
             }
 
             logging.info("Created vehicle data dict")
@@ -98,13 +98,14 @@ class VehicleDataClassifier:
         """
         try:
             logging.info("Entered predict method of VehicleDataClassifier class")
+            if os.path.exists(LOCAL_MODEL_FILE_PATH):
+                return load_object(LOCAL_MODEL_FILE_PATH).predict(dataframe)
+
             model = Proj1Estimator(
                 bucket_name=self.prediction_pipeline_config.model_bucket_name,
                 model_path=self.prediction_pipeline_config.model_file_path,
             )
-            result =  model.predict(dataframe)
-            
-            return result
+            return model.predict(dataframe)
         
         except Exception as e:
             raise MyException(e, sys)

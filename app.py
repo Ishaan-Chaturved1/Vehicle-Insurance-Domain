@@ -41,7 +41,7 @@ class DataForm:
     """
     def __init__(self, request: Request):
         self.request: Request = request
-        self.Gender: Optional[int] = None
+        self.Gender: Optional[str] = None
         self.Age: Optional[int] = None
         self.Driving_License: Optional[int] = None
         self.Region_Code: Optional[float] = None
@@ -49,9 +49,8 @@ class DataForm:
         self.Annual_Premium: Optional[float] = None
         self.Policy_Sales_Channel: Optional[float] = None
         self.Vintage: Optional[int] = None
-        self.Vehicle_Age_lt_1_Year: Optional[int] = None
-        self.Vehicle_Age_gt_2_Years: Optional[int] = None
-        self.Vehicle_Damage_Yes: Optional[int] = None
+        self.Vehicle_Age: Optional[str] = None
+        self.Vehicle_Damage: Optional[str] = None
                 
 
     async def get_vehicle_data(self):
@@ -60,17 +59,16 @@ class DataForm:
         This method is asynchronous to handle form data fetching without blocking.
         """
         form = await self.request.form()
-        self.Gender = form.get("Gender")
-        self.Age = form.get("Age")
-        self.Driving_License = form.get("Driving_License")
-        self.Region_Code = form.get("Region_Code")
-        self.Previously_Insured = form.get("Previously_Insured")
-        self.Annual_Premium = form.get("Annual_Premium")
-        self.Policy_Sales_Channel = form.get("Policy_Sales_Channel")
-        self.Vintage = form.get("Vintage")
-        self.Vehicle_Age_lt_1_Year = form.get("Vehicle_Age_lt_1_Year")
-        self.Vehicle_Age_gt_2_Years = form.get("Vehicle_Age_gt_2_Years")
-        self.Vehicle_Damage_Yes = form.get("Vehicle_Damage_Yes")
+        self.Gender = str(form.get("Gender"))
+        self.Age = int(form.get("Age"))
+        self.Driving_License = int(form.get("Driving_License"))
+        self.Region_Code = float(form.get("Region_Code"))
+        self.Previously_Insured = int(form.get("Previously_Insured"))
+        self.Annual_Premium = float(form.get("Annual_Premium"))
+        self.Policy_Sales_Channel = float(form.get("Policy_Sales_Channel"))
+        self.Vintage = int(form.get("Vintage"))
+        self.Vehicle_Age = str(form.get("Vehicle_Age"))
+        self.Vehicle_Damage = str(form.get("Vehicle_Damage"))
 
 # Route to render the main page with the form
 @app.get("/", tags=["authentication"])
@@ -79,7 +77,8 @@ async def index(request: Request):
     Renders the main HTML form page for vehicle data input.
     """
     return templates.TemplateResponse(
-            "vehicledata.html",{"request": request, "context": "Rendering"})
+        request=request, name="vehicledata.html", context={"context": "Rendering"}
+    )
 
 # Route to trigger the model training process
 @app.get("/train")
@@ -114,9 +113,8 @@ async def predictRouteClient(request: Request):
                                 Annual_Premium = form.Annual_Premium,
                                 Policy_Sales_Channel = form.Policy_Sales_Channel,
                                 Vintage = form.Vintage,
-                                Vehicle_Age_lt_1_Year = form.Vehicle_Age_lt_1_Year,
-                                Vehicle_Age_gt_2_Years = form.Vehicle_Age_gt_2_Years,
-                                Vehicle_Damage_Yes = form.Vehicle_Damage_Yes
+                                Vehicle_Age = form.Vehicle_Age,
+                                Vehicle_Damage = form.Vehicle_Damage,
                                 )
 
         # Convert form data into a DataFrame for the model
@@ -133,8 +131,9 @@ async def predictRouteClient(request: Request):
 
         # Render the same HTML page with the prediction result
         return templates.TemplateResponse(
-            "vehicledata.html",
-            {"request": request, "context": status},
+            request=request,
+            name="vehicledata.html",
+            context={"context": status},
         )
         
     except Exception as e:

@@ -28,8 +28,8 @@ class MyModel:
 
     def predict(self, dataframe: pd.DataFrame) -> DataFrame:
         """
-        Function accepts preprocessed inputs (with all custom transformations already applied),
-        applies scaling using preprocessing_object, and performs prediction on transformed features.
+        Function accepts raw feature inputs, applies the persisted preprocessing pipeline,
+        and then produces predictions.
         """
         try:
             logging.info("Starting prediction process.")

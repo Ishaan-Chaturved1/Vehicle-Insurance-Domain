@@ -1,5 +1,6 @@
 import os
 import sys
+import pandas as pd
 
 from pandas import DataFrame
 from sklearn.model_selection import train_test_split
@@ -30,10 +31,21 @@ class DataIngestion:
         On Failure  :   Write an exception log and then raise an exception
         """
         try:
-            logging.info(f"Exporting data from mongodb")
-            my_data = Proj1Data()
-            dataframe = my_data.export_collection_as_dataframe(collection_name=
-                                                                   self.data_ingestion_config.collection_name)
+            # A checked-in dataset makes local development and CI reproducible.  MongoDB
+            # remains the preferred source when it is explicitly configured.
+            mongo_url = os.getenv("MONGODB_URL")
+            if mongo_url:
+                logging.info("Exporting data from MongoDB")
+                my_data = Proj1Data()
+                dataframe = my_data.export_collection_as_dataframe(
+                    collection_name=self.data_ingestion_config.collection_name
+                )
+            else:
+                source_path = self.data_ingestion_config.local_data_file_path
+                if not os.path.exists(source_path):
+                    raise FileNotFoundError(f"Local training data was not found: {source_path}")
+                logging.info("MongoDB is not configured; using local dataset %s", source_path)
+                dataframe = pd.read_csv(source_path)
             logging.info(f"Shape of dataframe: {dataframe.shape}")
             feature_store_file_path  = self.data_ingestion_config.feature_store_file_path
             dir_path = os.path.dirname(feature_store_file_path)
@@ -56,7 +68,12 @@ class DataIngestion:
         logging.info("Entered split_data_as_train_test method of Data_Ingestion class")
 
         try:
-            train_set, test_set = train_test_split(dataframe, test_size=self.data_ingestion_config.train_test_split_ratio)
+            train_set, test_set = train_test_split(
+                dataframe,
+                test_size=self.data_ingestion_config.train_test_split_ratio,
+                random_state=42,
+                stratify=dataframe["Response"] if "Response" in dataframe else None,
+            )
             logging.info("Performed train test split on the dataframe")
             logging.info(
                 "Exited split_data_as_train_test method of Data_Ingestion class"

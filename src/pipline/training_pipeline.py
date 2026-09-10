@@ -1,4 +1,5 @@
 import sys
+import os
 from src.exception import MyException
 from src.logger import logging
 
@@ -140,7 +141,10 @@ class TrainPipeline:
             if not model_evaluation_artifact.is_model_accepted:
                 logging.info(f"Model not accepted.")
                 return None
-            model_pusher_artifact = self.start_model_pusher(model_evaluation_artifact=model_evaluation_artifact)
+            if os.getenv("AWS_ACCESS_KEY_ID") and os.getenv("AWS_SECRET_ACCESS_KEY"):
+                self.start_model_pusher(model_evaluation_artifact=model_evaluation_artifact)
+            else:
+                logging.info("AWS credentials are not configured; model is available locally at model.pkl.")
             
         except Exception as e:
             raise MyException(e, sys)
