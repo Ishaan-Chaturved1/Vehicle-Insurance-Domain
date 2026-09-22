@@ -35,26 +35,40 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install -r requirements.txt
+          python -m pip install pytest
 
-      # 4. Run tests
+      # 4. Verify Python and pytest
+      - name: Verify Python and pytest
+        run: |
+          python --version
+          python -m pip --version
+          python -m pip show pytest
+          python -m pytest --version
+
+      # 5. Run tests
       - name: Run tests
         run: |
-          pytest -q
+          python -m pytest -q
 
-      # 5. Configure AWS using GitHub OIDC
+      # 6. Configure AWS using GitHub OIDC
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::685248003104:role/GitHubActions-VehicleInsurance
           aws-region: ${{ env.AWS_REGION }}
 
-      # 6. Login to Amazon ECR
+      # 7. Verify AWS identity
+      - name: Verify AWS identity
+        run: |
+          aws sts get-caller-identity
+
+      # 8. Login to Amazon ECR
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # 7. Build Docker image
+      # 9. Build Docker image
       - name: Build Docker image
         run: |
           docker build \
@@ -62,29 +76,47 @@ jobs:
             -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest \
             .
 
-      # 8. Push Docker image
+      # 10. Push Docker image to ECR
       - name: Push Docker image
         run: |
           docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
           docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
 
-      # 9. Configure kubectl for EKS
+      # 11. Configure kubectl for EKS
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig \
             --region ${{ env.AWS_REGION }} \
             --name ${{ env.EKS_CLUSTER_NAME }}
 
-      # 10. Deploy new image to EKS
+      # 12. Verify Kubernetes access
+      - name: Verify Kubernetes access
+        run: |
+          kubectl get deployment \
+            --namespace ${{ env.K8S_NAMESPACE }}
+
+      # 13. Deploy new Docker image
       - name: Deploy to EKS
         run: |
-          kubectl -n ${{ env.K8S_NAMESPACE }} set image \
+          kubectl set image \
             deployment/vehicle-insurance \
-            vehicle-insurance=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+            vehicle-insurance=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
+            --namespace ${{ env.K8S_NAMESPACE }}
 
-      # 11. Wait for rollout
-      - name: Verify deployment
+      # 14. Wait for rolling deployment
+      - name: Verify deployment rollout
         run: |
-          kubectl -n ${{ env.K8S_NAMESPACE }} rollout status \
+          kubectl rollout status \
             deployment/vehicle-insurance \
+            --namespace ${{ env.K8S_NAMESPACE }} \
             --timeout=5m
+
+      # 15. Show final deployment status
+      - name: Show deployment status
+        run: |
+          kubectl get deployment vehicle-insurance \
+            --namespace ${{ env.K8S_NAMESPACE }}
+
+          kubectl get pods \
+            --namespace ${{ env.K8S_NAMESPACE }} \
+            --selector=app=vehicle-insurance
