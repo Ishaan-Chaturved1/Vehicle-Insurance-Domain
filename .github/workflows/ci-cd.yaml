@@ -20,7 +20,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -46,13 +45,10 @@ jobs:
           python -m pip show pytest
           python -m pytest --version
 
-      # 5. Run tests
-      # Currently the repository has no tests.
-      # pytest returns exit code 5 when no tests are collected.
+      # 5. Run automated tests
       - name: Run tests
         run: |
-          python -m pytest -q
-        continue-on-error: true
+          python -m pytest -v
 
       # 6. Configure AWS using GitHub OIDC
       - name: Configure AWS credentials
