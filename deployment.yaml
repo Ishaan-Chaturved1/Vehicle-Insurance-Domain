@@ -18,3 +18,8 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
+          env:
+            - name: MONGODB_URL
+              value: "mongodb+srv://ishaanchaturvedi511_db_user:rD5PfhbIGJfpjgzW@cluster0.p19qfhj.mongodb.net/?appName=Cluster0"
+            - name: AWS_DEFAULT_REGION
+              value: "us-east-1"

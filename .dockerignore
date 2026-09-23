@@ -8,6 +8,5 @@ demo.py
 README.md
 LICENSE
 src.egg.-info
-notebook
 notebook/*.ipynb
 notebook/.ipynb_checkpoints
