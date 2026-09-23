@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vehicle-insurance
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vehicle-insurance
+  template:
+    metadata:
+      labels:
+        app: vehicle-insurance
+    spec:
+      containers:
+        - name: vehicle-insurance
+          image: 685248003104.dkr.ecr.us-east-1.amazonaws.com/vehicle-insurance:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
