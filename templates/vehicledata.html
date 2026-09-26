@@ -3,327 +3,350 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vehicle Insurance Predictor | AI Engine</title>
-    <!-- CSS with Cache-busting version query string -->
-    <link rel="stylesheet" href="/static/css/style.css?v=3.0">
-    <!-- Font Awesome for Modern Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <title>Vehicle Insurance AI</title>
+
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
+
 <body>
-    <!-- Background Animated Glowing Mesh Orbs -->
-    <div class="bg-glow">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
-    </div>
 
-    <div class="app-wrapper">
-        <div class="glass-card">
-            
-            <!-- Header Section -->
-            <header class="header-section">
-                <div class="badge-pill">
-                    <span class="badge-dot"></span>
-                    <span>ML Production Engine • v1.0</span>
-                </div>
-                <h1 class="main-title">Vehicle Insurance Classifier</h1>
-                <p class="subtitle">Predict customer interest in vehicle insurance with deep machine learning intelligence</p>
-            </header>
+<div class="page">
 
-            <!-- Quick Presets / Fill Sample Data -->
-            <div class="quick-fill-bar">
-                <button type="button" class="sample-btn" onclick="fillSample('interested')">
-                    <i class="fa-solid fa-wand-magic-sparkles" style="color: #facc15;"></i> Sample: Likely Buyer
-                </button>
-                <button type="button" class="sample-btn" onclick="fillSample('not_interested')">
-                    <i class="fa-solid fa-user-shield"></i> Sample: Unlikely Buyer
-                </button>
+    <!-- Header -->
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-icon">VI</div>
+            <div>
+                <h2>Vehicle Insurance AI</h2>
+                <span>Intelligent customer response prediction</span>
+            </div>
+        </div>
+
+        <div class="status">
+            <span class="status-dot"></span>
+            Model Online
+        </div>
+    </header>
+
+
+    <!-- Main Content -->
+    <main class="content">
+
+        <!-- Left information panel -->
+        <section class="intro">
+
+            <div class="eyebrow">
+                MACHINE LEARNING
             </div>
 
-            <!-- Context / Prediction Result Banner -->
-            {% if context and context != "Rendering" %}
-                {% if context == "Response-Yes" %}
-                    <div class="result-banner yes">
-                        <div class="result-icon-wrapper">
-                            <i class="fa-solid fa-circle-check" style="color: #34d399;"></i>
-                        </div>
-                        <div class="result-details">
-                            <h3>High Interest Predicted (Response: YES)</h3>
-                            <p>Customer shows strong indicators and is likely to purchase vehicle insurance.</p>
-                        </div>
+            <h1>
+                Predict customer
+                <span>insurance response</span>
+            </h1>
+
+            <p class="intro-text">
+                Enter customer and vehicle information to estimate whether
+                the customer is likely to respond to the insurance offer.
+            </p>
+
+            <div class="info-grid">
+
+                <div class="info-card">
+                    <div class="info-icon">⚡</div>
+                    <div>
+                        <strong>Fast Prediction</strong>
+                        <p>Get model predictions instantly.</p>
                     </div>
-                {% elif context == "Response-No" %}
-                    <div class="result-banner no">
-                        <div class="result-icon-wrapper">
-                            <i class="fa-solid fa-circle-xmark" style="color: #f87171;"></i>
-                        </div>
-                        <div class="result-details">
-                            <h3>Low Interest Predicted (Response: NO)</h3>
-                            <p>Customer is unlikely to opt for vehicle insurance at this time.</p>
-                        </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon">☁</div>
+                    <div>
+                        <strong>Cloud Deployed</strong>
+                        <p>Running on AWS infrastructure.</p>
                     </div>
-                {% else %}
-                    <div class="result-banner info">
-                        <div class="result-icon-wrapper">
-                            <i class="fa-solid fa-brain" style="color: #a5b4fc;"></i>
-                        </div>
-                        <div class="result-details">
-                            <h3>Model Status: {{ context }}</h3>
-                            <p>Pipeline responded with status message.</p>
-                        </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon">◈</div>
+                    <div>
+                        <strong>ML Pipeline</strong>
+                        <p>Automated training and deployment.</p>
                     </div>
-                {% endif %}
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon">✓</div>
+                    <div>
+                        <strong>Production Ready</strong>
+                        <p>Containerized and Kubernetes based.</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- Prediction Card -->
+        <section class="prediction-card">
+
+            <div class="card-header">
+                <div>
+                    <p class="card-label">PREDICTION</p>
+                    <h2>Customer information</h2>
+                </div>
+
+                <div class="model-badge">
+                    Random Forest
+                </div>
+            </div>
+
+
+            <form method="post" action="/" class="prediction-form">
+
+                <!-- Gender -->
+                <div class="field">
+                    <label for="Gender">Gender</label>
+
+                    <select id="Gender" name="Gender" required>
+                        <option value="" disabled selected>
+                            Select gender
+                        </option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+
+
+                <!-- Age -->
+                <div class="field">
+                    <label for="Age">Age</label>
+
+                    <input
+                        type="number"
+                        id="Age"
+                        name="Age"
+                        min="18"
+                        max="100"
+                        placeholder="e.g. 35"
+                        required
+                    >
+                </div>
+
+
+                <!-- Driving License -->
+                <div class="field">
+                    <label for="Driving_License">Driving License</label>
+
+                    <select
+                        id="Driving_License"
+                        name="Driving_License"
+                        required
+                    >
+                        <option value="" disabled selected>
+                            Select status
+                        </option>
+                        <option value="1">Yes</option>
+                        <option value="0">No</option>
+                    </select>
+                </div>
+
+
+                <!-- Region -->
+                <div class="field">
+                    <label for="Region_Code">Region Code</label>
+
+                    <input
+                        type="number"
+                        step="0.01"
+                        id="Region_Code"
+                        name="Region_Code"
+                        placeholder="e.g. 28"
+                        required
+                    >
+                </div>
+
+
+                <!-- Previously insured -->
+                <div class="field">
+                    <label for="Previously_Insured">Previously Insured</label>
+
+                    <select
+                        id="Previously_Insured"
+                        name="Previously_Insured"
+                        required
+                    >
+                        <option value="" disabled selected>
+                            Select status
+                        </option>
+                        <option value="1">Yes</option>
+                        <option value="0">No</option>
+                    </select>
+                </div>
+
+
+                <!-- Annual premium -->
+                <div class="field">
+                    <label for="Annual_Premium">Annual Premium</label>
+
+                    <input
+                        type="number"
+                        step="0.01"
+                        id="Annual_Premium"
+                        name="Annual_Premium"
+                        placeholder="e.g. 35000"
+                        required
+                    >
+                </div>
+
+
+                <!-- Policy sales channel -->
+                <div class="field">
+                    <label for="Policy_Sales_Channel">
+                        Policy Sales Channel
+                    </label>
+
+                    <input
+                        type="number"
+                        step="0.01"
+                        id="Policy_Sales_Channel"
+                        name="Policy_Sales_Channel"
+                        placeholder="e.g. 26"
+                        required
+                    >
+                </div>
+
+
+                <!-- Vintage -->
+                <div class="field">
+                    <label for="Vintage">Customer Vintage</label>
+
+                    <input
+                        type="number"
+                        id="Vintage"
+                        name="Vintage"
+                        placeholder="e.g. 150"
+                        required
+                    >
+                </div>
+
+
+                <!-- Vehicle age -->
+                <div class="field">
+                    <label for="Vehicle_Age">Vehicle Age</label>
+
+                    <select
+                        id="Vehicle_Age"
+                        name="Vehicle_Age"
+                        required
+                    >
+                        <option value="" disabled selected>
+                            Select vehicle age
+                        </option>
+
+                        <option value="< 1 Year">
+                            &lt; 1 Year
+                        </option>
+
+                        <option value="1-2 Year">
+                            1–2 Years
+                        </option>
+
+                        <option value="> 2 Years">
+                            &gt; 2 Years
+                        </option>
+                    </select>
+                </div>
+
+
+                <!-- Vehicle damage -->
+                <div class="field">
+                    <label for="Vehicle_Damage">Vehicle Damage</label>
+
+                    <select
+                        id="Vehicle_Damage"
+                        name="Vehicle_Damage"
+                        required
+                    >
+                        <option value="" disabled selected>
+                            Select status
+                        </option>
+
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+
+
+                <!-- Predict button -->
+                <button type="submit" class="predict-btn">
+                    <span>Predict Response</span>
+                    <span class="arrow">→</span>
+                </button>
+
+            </form>
+
+
+            <!-- Result -->
+            {% if context %}
+            <div class="result-box {% if 'Yes' in context %}result-positive{% else %}result-negative{% endif %}">
+
+                <div class="result-icon">
+                    {% if 'Yes' in context %}
+                        ✓
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+
+                <div class="result-content">
+                    <span class="result-label">MODEL RESULT</span>
+                    <h3>{{ context }}</h3>
+                    <p>
+                        Prediction generated by the deployed machine learning model.
+                    </p>
+                </div>
+
+            </div>
             {% endif %}
 
-            <!-- Main Prediction Form -->
-            <form id="predictionForm" method="post" action="/">
-                <div class="form-grid">
-                    
-                    <!-- Gender -->
-                    <div class="form-group">
-                        <label class="field-label">
-                            <span><i class="fa-solid fa-venus-mars"></i> Gender</span>
-                            <span class="label-tag">Demographic</span>
-                        </label>
-                        <div class="radio-pill-group">
-                            <div class="radio-pill-item">
-                                <input type="radio" id="gender_male" name="Gender" value="Male" checked>
-                                <label for="gender_male" class="radio-pill-label">
-                                    <i class="fa-solid fa-mars"></i> Male
-                                </label>
-                            </div>
-                            <div class="radio-pill-item">
-                                <input type="radio" id="gender_female" name="Gender" value="Female">
-                                <label for="gender_female" class="radio-pill-label">
-                                    <i class="fa-solid fa-venus"></i> Female
-                                </label>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Age -->
-                    <div class="form-group">
-                        <label class="field-label" for="Age">
-                            <span><i class="fa-solid fa-calendar-day"></i> Age (Years)</span>
-                            <span class="label-tag">18 - 85</span>
-                        </label>
-                        <input type="number" class="input-control" id="Age" name="Age" min="18" max="100" placeholder="e.g. 35" value="35" required>
-                    </div>
+            <!-- Training -->
+            <div class="training-section">
 
-                    <!-- Driving License -->
-                    <div class="form-group">
-                        <label class="field-label">
-                            <span><i class="fa-solid fa-id-card"></i> Driving License</span>
-                            <span class="label-tag">Eligibility</span>
-                        </label>
-                        <div class="radio-pill-group">
-                            <div class="radio-pill-item">
-                                <input type="radio" id="license_1" name="Driving_License" value="1" checked>
-                                <label for="license_1" class="radio-pill-label">
-                                    <i class="fa-solid fa-check"></i> Has License (1)
-                                </label>
-                            </div>
-                            <div class="radio-pill-item">
-                                <input type="radio" id="license_0" name="Driving_License" value="0">
-                                <label for="license_0" class="radio-pill-label">
-                                    <i class="fa-solid fa-xmark"></i> No License (0)
-                                </label>
-                            </div>
-                        </div>
-                    </div>
+                <div>
+                    <p class="training-title">Model Training</p>
 
-                    <!-- Previously Insured -->
-                    <div class="form-group">
-                        <label class="field-label">
-                            <span><i class="fa-solid fa-shield-halved"></i> Previously Insured</span>
-                            <span class="label-tag">History</span>
-                        </label>
-                        <div class="radio-pill-group">
-                            <div class="radio-pill-item">
-                                <input type="radio" id="insured_0" name="Previously_Insured" value="0" checked>
-                                <label for="insured_0" class="radio-pill-label">
-                                    <i class="fa-solid fa-shield-slash"></i> No (0)
-                                </label>
-                            </div>
-                            <div class="radio-pill-item">
-                                <input type="radio" id="insured_1" name="Previously_Insured" value="1">
-                                <label for="insured_1" class="radio-pill-label">
-                                    <i class="fa-solid fa-shield"></i> Yes (1)
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Vehicle Age -->
-                    <div class="form-group full-width">
-                        <label class="field-label">
-                            <span><i class="fa-solid fa-car-side"></i> Vehicle Age</span>
-                            <span class="label-tag">Asset Condition</span>
-                        </label>
-                        <div class="radio-pill-group">
-                            <div class="radio-pill-item">
-                                <input type="radio" id="vage_lt1" name="Vehicle_Age" value="< 1 Year">
-                                <label for="vage_lt1" class="radio-pill-label">
-                                    <i class="fa-solid fa-certificate"></i> &lt; 1 Year
-                                </label>
-                            </div>
-                            <div class="radio-pill-item">
-                                <input type="radio" id="vage_12" name="Vehicle_Age" value="1-2 Year" checked>
-                                <label for="vage_12" class="radio-pill-label">
-                                    <i class="fa-solid fa-car"></i> 1-2 Years
-                                </label>
-                            </div>
-                            <div class="radio-pill-item">
-                                <input type="radio" id="vage_gt2" name="Vehicle_Age" value="> 2 Years">
-                                <label for="vage_gt2" class="radio-pill-label">
-                                    <i class="fa-solid fa-truck-pickup"></i> &gt; 2 Years
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Vehicle Damage -->
-                    <div class="form-group">
-                        <label class="field-label">
-                            <span><i class="fa-solid fa-car-burst"></i> Past Vehicle Damage</span>
-                            <span class="label-tag">Risk Factor</span>
-                        </label>
-                        <div class="radio-pill-group">
-                            <div class="radio-pill-item">
-                                <input type="radio" id="damage_yes" name="Vehicle_Damage" value="Yes" checked>
-                                <label for="damage_yes" class="radio-pill-label">
-                                    <i class="fa-solid fa-triangle-exclamation" style="color: #f87171;"></i> Yes
-                                </label>
-                            </div>
-                            <div class="radio-pill-item">
-                                <input type="radio" id="damage_no" name="Vehicle_Damage" value="No">
-                                <label for="damage_no" class="radio-pill-label">
-                                    <i class="fa-solid fa-circle-check" style="color: #34d399;"></i> No
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Region Code -->
-                    <div class="form-group">
-                        <label class="field-label" for="Region_Code">
-                            <span><i class="fa-solid fa-location-dot"></i> Region Code</span>
-                            <span class="label-tag">Geo ID</span>
-                        </label>
-                        <input type="number" step="0.01" class="input-control" id="Region_Code" name="Region_Code" placeholder="e.g. 28.0" value="28.0" required>
-                    </div>
-
-                    <!-- Annual Premium -->
-                    <div class="form-group">
-                        <label class="field-label" for="Annual_Premium">
-                            <span><i class="fa-solid fa-file-invoice-dollar"></i> Annual Premium</span>
-                            <span class="label-tag" id="premiumFormatted">₹ 35,000</span>
-                        </label>
-                        <input type="number" step="0.01" class="input-control" id="Annual_Premium" name="Annual_Premium" placeholder="e.g. 35000" value="35000" required oninput="formatPremium(this.value)">
-                    </div>
-
-                    <!-- Policy Sales Channel -->
-                    <div class="form-group">
-                        <label class="field-label" for="Policy_Sales_Channel">
-                            <span><i class="fa-solid fa-tower-broadcast"></i> Policy Sales Channel</span>
-                            <span class="label-tag">Channel Code</span>
-                        </label>
-                        <input type="number" step="0.01" class="input-control" id="Policy_Sales_Channel" name="Policy_Sales_Channel" placeholder="e.g. 152.0" value="152.0" required>
-                    </div>
-
-                    <!-- Vintage -->
-                    <div class="form-group full-width">
-                        <label class="field-label" for="Vintage">
-                            <span><i class="fa-solid fa-hourglass-half"></i> Customer Vintage (Days)</span>
-                            <span class="label-tag">Tenure</span>
-                        </label>
-                        <input type="number" class="input-control" id="Vintage" name="Vintage" placeholder="Days associated (e.g. 180)" value="180" required>
-                    </div>
-
+                    <p class="training-text">
+                        Retrain the model using the latest available data.
+                    </p>
                 </div>
 
-                <!-- Actions -->
-                <div class="action-bar">
-                    <button type="submit" class="btn-predict">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Predict Customer Interest
+                <form method="get" action="/train">
+                    <button type="submit" class="train-btn">
+                        Train Model
                     </button>
-                    <a href="/train" class="btn-train" onclick="triggerTrain(event, this)">
-                        <i class="fa-solid fa-arrows-rotate"></i> Train Model
-                    </a>
-                </div>
-            </form>
-        </div>
-    </div>
+                </form>
 
-    <!-- Toast Notification for Background Action -->
-    <div id="toast" class="toast">
-        <div class="spinner"></div>
-        <span id="toastMsg">Triggering model retraining pipeline...</span>
-    </div>
+            </div>
 
-    <script>
-        function formatPremium(val) {
-            const num = parseFloat(val);
-            const tag = document.getElementById('premiumFormatted');
-            if (!isNaN(num)) {
-                tag.innerText = '₹ ' + num.toLocaleString('en-IN');
-            } else {
-                tag.innerText = '₹ 0';
-            }
-        }
+        </section>
 
-        function fillSample(type) {
-            if (type === 'interested') {
-                document.getElementById('gender_male').checked = true;
-                document.getElementById('Age').value = 45;
-                document.getElementById('license_1').checked = true;
-                document.getElementById('insured_0').checked = true;
-                document.getElementById('vage_12').checked = true;
-                document.getElementById('damage_yes').checked = true;
-                document.getElementById('Region_Code').value = 28.0;
-                document.getElementById('Annual_Premium').value = 42500;
-                document.getElementById('Policy_Sales_Channel').value = 26.0;
-                document.getElementById('Vintage').value = 183;
-            } else {
-                document.getElementById('gender_female').checked = true;
-                document.getElementById('Age').value = 22;
-                document.getElementById('license_1').checked = true;
-                document.getElementById('insured_1').checked = true;
-                document.getElementById('vage_lt1').checked = true;
-                document.getElementById('damage_no').checked = true;
-                document.getElementById('Region_Code').value = 15.0;
-                document.getElementById('Annual_Premium').value = 26300;
-                document.getElementById('Policy_Sales_Channel').value = 152.0;
-                document.getElementById('Vintage').value = 75;
-            }
-            formatPremium(document.getElementById('Annual_Premium').value);
-        }
+    </main>
 
-        function triggerTrain(e, el) {
-            e.preventDefault();
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toastMsg');
-            toast.style.display = 'flex';
-            toastMsg.innerText = 'Triggering model retraining pipeline in background...';
 
-            fetch('/train')
-                .then(res => res.text())
-                .then(data => {
-                    toastMsg.innerText = data;
-                    setTimeout(() => {
-                        toast.style.display = 'none';
-                    }, 5000);
-                })
-                .catch(err => {
-                    toastMsg.innerText = 'Training error: ' + err;
-                    setTimeout(() => {
-                        toast.style.display = 'none';
-                    }, 5000);
-                });
-        }
+    <!-- Footer -->
+    <footer>
+        Vehicle Insurance Prediction System
+        <span>•</span>
+        AWS EKS
+        <span>•</span>
+        MLOps Pipeline
+    </footer>
 
-        // Initialize on load
-        formatPremium(document.getElementById('Annual_Premium').value);
-    </script>
+</div>
+
 </body>
 </html>
