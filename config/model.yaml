@@ -1,0 +1,16 @@
+model_selection:
+  module: sklearn.ensemble
+  class: RandomForestClassifier
+  params:
+    n_estimators: 50
+    min_samples_split: 7
+    min_samples_leaf: 6
+    max_depth: 10
+    criterion: entropy
+    random_state: 101
+    class_weight: balanced_subsample
+    n_jobs: -1
+
+evaluation:
+  expected_score: 0.6
+  metric: accuracy
