@@ -8,13 +8,14 @@
       "height": 6,
       "properties": {
         "metrics": [
-          [ "ContainerInsights", "pod_cpu_utilization", "ClusterName", "my-eks-cluster", "PodName", "vehicle-insurance", { "stat": "Average" } ]
+          [ "ContainerInsights", "pod_cpu_utilization", "PodName", "vehicle-insurance", "ClusterName", "my-eks-cluster", "Namespace", "default", { "stat": "Average" } ]
         ],
         "view": "timeSeries",
         "stacked": false,
         "region": "us-east-1",
-        "title": "Vehicle Insurance — Pod CPU Utilization (%)",
-        "period": 60
+        "title": "Vehicle Insurance - Pod CPU Utilization (%)",
+        "period": 60,
+        "yAxis": { "left": { "min": 0 } }
       }
     },
     {
@@ -25,13 +26,14 @@
       "height": 6,
       "properties": {
         "metrics": [
-          [ "ContainerInsights", "pod_memory_utilization", "ClusterName", "my-eks-cluster", "PodName", "vehicle-insurance", { "stat": "Average" } ]
+          [ "ContainerInsights", "pod_memory_utilization", "PodName", "vehicle-insurance", "ClusterName", "my-eks-cluster", "Namespace", "default", { "stat": "Average" } ]
         ],
         "view": "timeSeries",
         "stacked": false,
         "region": "us-east-1",
-        "title": "Vehicle Insurance — Pod Memory Utilization (%)",
-        "period": 60
+        "title": "Vehicle Insurance - Pod Memory Utilization (%)",
+        "period": 60,
+        "yAxis": { "left": { "min": 0 } }
       }
     },
     {
@@ -42,13 +44,14 @@
       "height": 6,
       "properties": {
         "metrics": [
-          [ "ContainerInsights", "pod_number_of_container_restarts", "ClusterName", "my-eks-cluster", "PodName", "vehicle-insurance", { "stat": "Sum" } ]
+          [ "ContainerInsights", "pod_number_of_container_restarts", "PodName", "vehicle-insurance", "ClusterName", "my-eks-cluster", "Namespace", "default", { "stat": "Sum" } ]
         ],
         "view": "timeSeries",
         "stacked": false,
         "region": "us-east-1",
         "title": "Container Restarts",
-        "period": 300
+        "period": 300,
+        "yAxis": { "left": { "min": 0 } }
       }
     },
     {
@@ -65,8 +68,9 @@
         "view": "timeSeries",
         "stacked": false,
         "region": "us-east-1",
-        "title": "EKS Worker Nodes — CPU & Memory (%)",
-        "period": 60
+        "title": "EKS Worker Nodes - CPU and Memory (%)",
+        "period": 60,
+        "yAxis": { "left": { "min": 0 } }
       }
     },
     {
@@ -76,7 +80,7 @@
       "width": 24,
       "height": 6,
       "properties": {
-        "query": "SOURCE '/aws/containerinsights/my-eks-cluster/application'\n| filter kubernetes.pod_name like /vehicle-insurance/\n| parse log /^\\[(?<timestamp>[^\\]]+)\\]\\s+(?<module>\\S+)\\s+-\\s+(?<level>\\S+)\\s+-\\s+(?<message>.*)$/\n| sort @timestamp desc\n| limit 50",
+        "query": "SOURCE '/aws/containerinsights/my-eks-cluster/application'\n| fields @timestamp, kubernetes.pod_name as pod, log\n| filter kubernetes.pod_name like /vehicle-insurance/\n| sort @timestamp desc\n| limit 50",
         "region": "us-east-1",
         "title": "Application Container Logs (Live Feed)",
         "view": "table"
