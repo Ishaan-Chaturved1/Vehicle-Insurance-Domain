@@ -201,7 +201,7 @@ spec:
               name: http
           env:
             - name: GF_SECURITY_ADMIN_PASSWORD
-              value: "admin321"
+              value: "admin"
             - name: GF_USERS_ALLOW_SIGN_UP
               value: "false"
             - name: GF_AUTH_ANONYMOUS_ENABLED
