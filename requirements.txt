@@ -18,4 +18,6 @@ python-multipart
 uvicorn
 jinja2
 imbalanced-learn>=0.11
+prometheus-client>=0.20.0
+httpx>=0.27.0
 -e .

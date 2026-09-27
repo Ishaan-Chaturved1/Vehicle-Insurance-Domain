@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alerts
+  namespace: observability
+data:
+  alerts.yml: |
+    groups:
+      - name: vehicle-insurance-alerts
+        rules:
+          # 1. Pod Availability Alert
+          - alert: VehicleInsurancePodUnavailable
+            expr: count(up{job="vehicle-insurance-app"} == 1) < 1
+            for: 2m
+            labels:
+              severity: critical
+              service: vehicle-insurance
+            annotations:
+              summary: "No Vehicle Insurance pods are running and healthy"
+              description: "Zero pods for vehicle-insurance-app are reporting UP status for more than 2 minutes."
+
+          # 2. High Prediction Error Rate Alert
+          - alert: HighPredictionErrorRate
+            expr: sum(rate(vehicle_insurance_prediction_errors_total[5m])) / (sum(rate(vehicle_insurance_prediction_requests_total[5m])) + 0.001) > 0.05
+            for: 5m
+            labels:
+              severity: warning
+              service: vehicle-insurance
+            annotations:
+              summary: "Prediction error rate exceeds 5%"
+              description: "Prediction failures exceed 5% of total requests over the last 5 minutes."
+
+          # 3. High Prediction Latency (P95 > 1s)
+          - alert: HighPredictionLatency
+            expr: histogram_quantile(0.95, sum(rate(vehicle_insurance_prediction_latency_seconds_bucket[5m])) by (le)) > 1.0
+            for: 5m
+            labels:
+              severity: warning
+              service: vehicle-insurance
+            annotations:
+              summary: "P95 Prediction Latency is above 1 second"
+              description: "95th percentile prediction processing time exceeded 1.0s over the last 5 minutes."
+
+          # 4. MongoDB Operations Failure Spike
+          - alert: MongoDBErrorSpike
+            expr: sum(rate(vehicle_insurance_mongodb_errors_total[5m])) > 0.1
+            for: 2m
+            labels:
+              severity: critical
+              service: vehicle-insurance
+            annotations:
+              summary: "Elevated MongoDB error rate detected"
+              description: "MongoDB connection or query failures detected in the application."
+
+          # 5. Training Pipeline Failure Alert
+          - alert: ModelTrainingFailed
+            expr: increase(vehicle_insurance_training_failures_total[1h]) > 0
+            for: 1m
+            labels:
+              severity: warning
+              service: vehicle-insurance
+            annotations:
+              summary: "Model training pipeline execution failed"
+              description: "A model training execution triggered via /train failed in the last hour."
+
+          # 6. High Container Memory Alert (> 85% of 1.5Gi limit = 1.3Gi)
+          - alert: HighContainerMemoryUsage
+            expr: sum(container_memory_working_set_bytes{container="vehicle-insurance"}) by (pod) > 1.3e+09
+            for: 5m
+            labels:
+              severity: warning
+              service: vehicle-insurance
+            annotations:
+              summary: "Vehicle insurance container memory usage > 85%"
+              description: "Pod {{ $labels.pod }} memory working set is approaching container limit."

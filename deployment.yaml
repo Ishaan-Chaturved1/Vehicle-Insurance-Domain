@@ -2,6 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: vehicle-insurance
+  namespace: default
+  labels:
+    app: vehicle-insurance
 spec:
   replicas: 2
   selector:
@@ -11,15 +14,43 @@ spec:
     metadata:
       labels:
         app: vehicle-insurance
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: vehicle-insurance
           image: 685248003104.dkr.ecr.us-east-1.amazonaws.com/vehicle-insurance:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 5000
+            - name: http
+              containerPort: 5000
           env:
             - name: MONGODB_URL
               value: "mongodb+srv://ishaanchaturvedi511_db_user:rD5PfhbIGJfpjgzW@cluster0.p19qfhj.mongodb.net/?appName=Cluster0"
             - name: AWS_DEFAULT_REGION
               value: "us-east-1"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1536Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2

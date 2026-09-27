@@ -1,0 +1,248 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: observability
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus.observability.svc:9090
+        isDefault: true
+        editable: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-provider
+  namespace: observability
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: 'Vehicle Insurance Dashboards'
+        orgId: 1
+        folder: 'MLOps'
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /etc/grafana/provisioning/dashboards/json
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-json
+  namespace: observability
+data:
+  vehicle-insurance-dashboard.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "title": "Prediction Request Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(vehicle_insurance_prediction_requests_total[5m])) by (status)",
+              "legendFormat": "{{status}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Prediction Latency (P50, P95, P99)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(vehicle_insurance_prediction_latency_seconds_bucket[5m])) by (le))",
+              "legendFormat": "P50 Latency (s)",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(vehicle_insurance_prediction_latency_seconds_bucket[5m])) by (le))",
+              "legendFormat": "P95 Latency (s)",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(vehicle_insurance_prediction_latency_seconds_bucket[5m])) by (le))",
+              "legendFormat": "P99 Latency (s)",
+              "refId": "C"
+            }
+          ]
+        },
+        {
+          "title": "Prediction Error Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(vehicle_insurance_prediction_errors_total[5m])) by (error_type)",
+              "legendFormat": "{{error_type}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "HTTP Request Rate by Endpoint",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "targets": [
+            {
+              "expr": "sum(rate(vehicle_insurance_http_requests_total[5m])) by (endpoint, status_code)",
+              "legendFormat": "{{endpoint}} ({{status_code}})",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "MongoDB Operations Errors",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "targets": [
+            {
+              "expr": "sum(rate(vehicle_insurance_mongodb_errors_total[5m])) by (operation)",
+              "legendFormat": "{{operation}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Model Training Runs (Last 24h)",
+          "type": "stat",
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 16 },
+          "targets": [
+            {
+              "expr": "sum(increase(vehicle_insurance_training_runs_total{status='completed'}[24h])) or vector(0)",
+              "legendFormat": "Completed",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Training Failures (Last 24h)",
+          "type": "stat",
+          "gridPos": { "h": 6, "w": 6, "x": 6, "y": 16 },
+          "targets": [
+            {
+              "expr": "sum(increase(vehicle_insurance_training_failures_total[24h])) or vector(0)",
+              "legendFormat": "Failures",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Active Vehicle Insurance Pods",
+          "type": "stat",
+          "gridPos": { "h": 6, "w": 6, "x": 12, "y": 16 },
+          "targets": [
+            {
+              "expr": "count(up{job='vehicle-insurance-app'} == 1) or vector(0)",
+              "legendFormat": "Running Pods",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Container CPU Usage",
+          "type": "timeseries",
+          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 16 },
+          "targets": [
+            {
+              "expr": "sum(rate(container_cpu_usage_seconds_total{container='vehicle-insurance'}[5m])) by (pod)",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ]
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["mlops", "vehicle-insurance", "observability"],
+      "time": { "from": "now-1h", "to": "now" },
+      "timepicker": { "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"] },
+      "timezone": "browser",
+      "title": "Vehicle Insurance — Production Observability",
+      "uid": "vehicle-insurance-obs"
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:10.2.2
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: "admin"
+            - name: GF_USERS_ALLOW_SIGN_UP
+              value: "false"
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: "Viewer"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboards-json
+              mountPath: /etc/grafana/provisioning/dashboards/json
+      volumes:
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        - name: dashboard-provider
+          configMap:
+            name: grafana-dashboard-provider
+        - name: dashboards-json
+          configMap:
+            name: grafana-dashboards-json
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: observability
+spec:
+  type: ClusterIP
+  selector:
+    app: grafana
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: http

@@ -57,4 +57,10 @@ class MongoDBClient:
             logging.info("MongoDB connection successful.")
 
         except Exception as e:
+            try:
+                from src.observability import MONGODB_ERRORS_TOTAL
+                MONGODB_ERRORS_TOTAL.labels(operation="connection").inc()
+            except Exception:
+                pass
+            logging.error(f"MongoDB connection failed: {e}", exc_info=True)
             raise MyException(e, sys)

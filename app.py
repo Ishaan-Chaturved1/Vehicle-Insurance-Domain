@@ -7,14 +7,28 @@ from starlette.responses import HTMLResponse, RedirectResponse
 from uvicorn import run as app_run
 
 from typing import Optional
+import time
 
 # Importing constants and pipeline modules from the project
 from src.constants import APP_HOST, APP_PORT
+from src.logger import logging
 from src.pipline.prediction_pipeline import VehicleData, VehicleDataClassifier
 from src.pipline.training_pipeline import TrainPipeline
+from src.observability import (
+    PREDICTION_REQUESTS_TOTAL,
+    PREDICTION_ERRORS_TOTAL,
+    PREDICTION_LATENCY_SECONDS,
+    TRAINING_RUNS_TOTAL,
+    TRAINING_FAILURES_TOTAL,
+    PrometheusMiddleware,
+    get_latest_metrics,
+)
 
 # Initialize FastAPI application
 app = FastAPI()
+
+# Register Prometheus HTTP request tracking middleware
+app.add_middleware(PrometheusMiddleware)
 
 # Mount the 'static' directory for serving static files (like CSS)
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -70,8 +84,49 @@ class DataForm:
         self.Vehicle_Age = str(form.get("Vehicle_Age"))
         self.Vehicle_Damage = str(form.get("Vehicle_Damage"))
 
+# =============================================================================
+# Observability Endpoints (Health, Readiness, Metrics)
+# =============================================================================
+
+@app.get("/health", tags=["observability"])
+async def health():
+    """
+    Liveness and health check endpoint for Kubernetes and monitoring systems.
+    Fast, lightweight, non-blocking check that confirms the service process is alive.
+    """
+    return {
+        "status": "healthy",
+        "service": "vehicle-insurance",
+    }
+
+
+@app.get("/ready", tags=["observability"])
+async def ready():
+    """
+    Readiness probe endpoint for Kubernetes traffic ingress.
+    Confirms the application container is ready to accept incoming user traffic.
+    """
+    return {
+        "status": "ready",
+        "service": "vehicle-insurance",
+    }
+
+
+@app.get("/metrics", tags=["observability"])
+async def metrics():
+    """
+    Prometheus metrics scraping endpoint.
+    Exposes application metrics, HTTP counters, prediction latencies, and training stats.
+    """
+    return get_latest_metrics()
+
+
+# =============================================================================
+# Application Routes
+# =============================================================================
+
 # Route to render the main page with the form
-@app.get("/", tags=["authentication"])
+@app.get("/", tags=["frontend"])
 async def index(request: Request):
     """
     Renders the main HTML form page for vehicle data input.
@@ -80,42 +135,54 @@ async def index(request: Request):
         request=request, name="vehicledata.html", context={"context": "Rendering"}
     )
 
+
 # Route to trigger the model training process
-@app.get("/train")
+@app.get("/train", tags=["training"])
 async def trainRouteClient():
     """
     Endpoint to initiate the model training pipeline.
+    Instruments training runs, duration, and failure counts.
     """
+    TRAINING_RUNS_TOTAL.labels(status="started").inc()
+    logging.info("Model training pipeline initiated via /train")
     try:
         train_pipeline = TrainPipeline()
         train_pipeline.run_pipeline()
+        TRAINING_RUNS_TOTAL.labels(status="completed").inc()
+        logging.info("Model training pipeline completed successfully")
         return Response("Training successful!!!")
 
     except Exception as e:
+        TRAINING_RUNS_TOTAL.labels(status="failed").inc()
+        TRAINING_FAILURES_TOTAL.labels(stage="pipeline").inc()
+        logging.error(f"Model training pipeline failed: {e}", exc_info=True)
         return Response(f"Error Occurred! {e}")
 
+
 # Route to handle form submission and make predictions
-@app.post("/")
+@app.post("/", tags=["prediction"])
 async def predictRouteClient(request: Request):
     """
     Endpoint to receive form data, process it, and make a prediction.
+    Instruments prediction count, latency histogram, and error metrics.
     """
+    start_time = time.time()
     try:
         form = DataForm(request)
         await form.get_vehicle_data()
-        
+
         vehicle_data = VehicleData(
-                                Gender= form.Gender,
-                                Age = form.Age,
-                                Driving_License = form.Driving_License,
-                                Region_Code = form.Region_Code,
-                                Previously_Insured = form.Previously_Insured,
-                                Annual_Premium = form.Annual_Premium,
-                                Policy_Sales_Channel = form.Policy_Sales_Channel,
-                                Vintage = form.Vintage,
-                                Vehicle_Age = form.Vehicle_Age,
-                                Vehicle_Damage = form.Vehicle_Damage,
-                                )
+            Gender=form.Gender,
+            Age=form.Age,
+            Driving_License=form.Driving_License,
+            Region_Code=form.Region_Code,
+            Previously_Insured=form.Previously_Insured,
+            Annual_Premium=form.Annual_Premium,
+            Policy_Sales_Channel=form.Policy_Sales_Channel,
+            Vintage=form.Vintage,
+            Vehicle_Age=form.Vehicle_Age,
+            Vehicle_Damage=form.Vehicle_Damage,
+        )
 
         # Convert form data into a DataFrame for the model
         vehicle_df = vehicle_data.get_vehicle_input_data_frame()
@@ -126,8 +193,16 @@ async def predictRouteClient(request: Request):
         # Make a prediction and retrieve the result
         value = model_predictor.predict(dataframe=vehicle_df)[0]
 
+        # Calculate latency
+        latency = time.time() - start_time
+        PREDICTION_LATENCY_SECONDS.observe(latency)
+        PREDICTION_REQUESTS_TOTAL.labels(status="success").inc()
+
         # Interpret the prediction result as 'Response-Yes' or 'Response-No'
         status = "Response-Yes" if value == 1 else "Response-No"
+        logging.info(
+            f"Prediction completed successfully in {latency:.4f}s with result={status}"
+        )
 
         # Render the same HTML page with the prediction result
         return templates.TemplateResponse(
@@ -135,10 +210,17 @@ async def predictRouteClient(request: Request):
             name="vehicledata.html",
             context={"context": status},
         )
-        
+
     except Exception as e:
+        latency = time.time() - start_time
+        PREDICTION_LATENCY_SECONDS.observe(latency)
+        PREDICTION_REQUESTS_TOTAL.labels(status="failure").inc()
+        PREDICTION_ERRORS_TOTAL.labels(error_type=type(e).__name__).inc()
+        logging.error(f"Prediction request failed after {latency:.4f}s: {e}", exc_info=True)
         return {"status": False, "error": f"{e}"}
+
 
 # Main entry point to start the FastAPI server
 if __name__ == "__main__":
     app_run(app, host=APP_HOST, port=APP_PORT)
+

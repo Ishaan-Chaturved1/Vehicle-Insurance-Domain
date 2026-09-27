@@ -120,3 +120,14 @@ jobs:
           kubectl get pods \
             --namespace ${{ env.K8S_NAMESPACE }} \
             --selector=app=vehicle-insurance
+
+      # 16. Post-deployment observability smoke tests
+      - name: Run post-deployment smoke tests
+        run: |
+          kubectl wait --for=condition=ready pod -l app=vehicle-insurance --timeout=60s --namespace ${{ env.K8S_NAMESPACE }}
+          POD_NAME=$(kubectl get pods -n ${{ env.K8S_NAMESPACE }} -l app=vehicle-insurance -o jsonpath='{.items[0].metadata.name}')
+          echo "Testing /health on pod: $POD_NAME"
+          kubectl exec -n ${{ env.K8S_NAMESPACE }} "$POD_NAME" -- python -c "import urllib.request, json; res = json.loads(urllib.request.urlopen('http://localhost:5000/health').read()); assert res['status'] == 'healthy'"
+          echo "Testing /metrics on pod: $POD_NAME"
+          kubectl exec -n ${{ env.K8S_NAMESPACE }} "$POD_NAME" -- python -c "import urllib.request; body = urllib.request.urlopen('http://localhost:5000/metrics').read().decode(); assert 'vehicle_insurance_prediction_requests_total' in body"
+          echo "Observability smoke tests passed successfully!"

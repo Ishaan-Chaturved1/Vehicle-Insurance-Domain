@@ -1,0 +1,86 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "ContainerInsights", "pod_cpu_utilization", "ClusterName", "my-eks-cluster", "PodName", "vehicle-insurance", { "stat": "Average" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Vehicle Insurance — Pod CPU Utilization (%)",
+        "period": 60
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "ContainerInsights", "pod_memory_utilization", "ClusterName", "my-eks-cluster", "PodName", "vehicle-insurance", { "stat": "Average" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Vehicle Insurance — Pod Memory Utilization (%)",
+        "period": 60
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 6,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "ContainerInsights", "pod_number_of_container_restarts", "ClusterName", "my-eks-cluster", "PodName", "vehicle-insurance", { "stat": "Sum" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Container Restarts",
+        "period": 300
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 6,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "ContainerInsights", "node_cpu_utilization", "ClusterName", "my-eks-cluster", { "stat": "Average" } ],
+          [ ".", "node_memory_utilization", ".", ".", { "stat": "Average" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "EKS Worker Nodes — CPU & Memory (%)",
+        "period": 60
+      }
+    },
+    {
+      "type": "log",
+      "x": 0,
+      "y": 12,
+      "width": 24,
+      "height": 6,
+      "properties": {
+        "query": "SOURCE '/aws/containerinsights/my-eks-cluster/application'\n| filter kubernetes.pod_name like /vehicle-insurance/\n| parse log /^\\[(?<timestamp>[^\\]]+)\\]\\s+(?<module>\\S+)\\s+-\\s+(?<level>\\S+)\\s+-\\s+(?<message>.*)$/\n| sort @timestamp desc\n| limit 50",
+        "region": "us-east-1",
+        "title": "Application Container Logs (Live Feed)",
+        "view": "table"
+      }
+    }
+  ]
+}
