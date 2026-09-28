@@ -1,436 +1,157 @@
-# 🚗 Vehicle Insurance Prediction — Enterprise MLOps Platform
+# MLOps Project - Vehicle Insurance Data Pipeline
 
-<div align="center">
-
-[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![AWS](https://img.shields.io/badge/AWS-EKS%20%7C%20ECR%20%7C%20S3%20%7C%20CloudWatch-FF9900?style=for-the-badge&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/)
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-1.34-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
-[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
-[![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)](https://prometheus.io/)
-[![Grafana](https://img.shields.io/badge/Grafana-Visualization-F46800?style=for-the-badge&logo=grafana&logoColor=white)](https://grafana.com/)
-[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/features/actions)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-
-<br/>
-
-**A production-ready, end-to-end Machine Learning Operations (MLOps) platform predicting customer vehicle insurance purchase intent — featuring automated pipelines, zero-downtime AWS EKS deployment, automated model registry on S3, and full-stack enterprise observability.**
-
-[Explore Architecture](#-system-architecture) • [Observability Stack](#-production-observability-stack) • [Quickstart](#-quickstart--local-development) • [API Reference](#-api-endpoints)
-
-</div>
+Welcome to this MLOps project, designed to demonstrate a robust pipeline for managing vehicle insurance data. This project aims to impress recruiters and visitors by showcasing the various tools, techniques, services, and features that go into building and deploying a machine learning pipeline for real-world data management. Follow along to learn about project setup, data processing, model deployment, and CI/CD automation!
 
 ---
 
-## 🌟 Executive Summary
+## 📁 Project Setup and Structure
 
-This project showcases a complete industrial-grade MLOps system that bridges data science and site reliability engineering (SRE). Rather than stopping at a Jupyter Notebook or a simple Flask script, this solution implements:
+### Step 1: Project Template
+- Start by executing the `template.py` file to create the initial project template, which includes the required folder structure and placeholder files.
 
-1. **Automated ML Lifecycle**: Continuous data ingestion from MongoDB Atlas, schema validation, scikit-learn preprocessing pipelines, automated model evaluation against live S3 model registry benchmarks, and model artifact pushing.
-2. **Resilient Microservice Backend**: High-performance FastAPI server serving asynchronous batch/single inference and pipeline orchestration endpoints.
-3. **Enterprise Kubernetes Deployment**: Cloud-native deployment on **AWS EKS 1.34** fronted by an AWS Application Load Balancer with automated health probes (liveness, readiness), graceful terminations, and granular resource quotas.
-4. **Three-Tier Observability Stack**:
-   - **Prometheus**: Custom Prometheus metrics (prediction counters, latency histograms, training status, DB error tracking) + cAdvisor metrics.
-   - **Grafana**: Pre-provisioned dashboards visualizing request throughput, P50/P95/P99 latency, container metrics, and error rates.
-   - **AWS CloudWatch Container Insights**: Host/Pod CPU and Memory metrics, Fluent Bit log aggregation, and real-time container log analysis.
-5. **Modern Glassmorphic UI**: Ultra-responsive, interactive client interface with real-time prediction feedback and quick sample presets.
+### Step 2: Package Management
+- Write the setup for importing local packages in `setup.py` and `pyproject.toml` files.
+- **Tip**: Learn more about these files from `crashcourse.txt`.
 
----
-
-## 🏛️ System Architecture
-
-```mermaid
-flowchart TD
-    subgraph Traffic [" Client & Ingress Layer "]
-        User(("👤 Users & APIs"))
-        ALB["☁️ AWS Network / App Load Balancer"]
-        K8sSvc["☸️ Kubernetes Service (Port 80 -> 5000)"]
-    end
-
-    subgraph Cluster [" AWS EKS Cluster (my-eks-cluster) "]
-        subgraph AppNamespace [" default Namespace "]
-            Pod1["📦 Vehicle Insurance Pod 1 (FastAPI)"]
-            Pod2["📦 Vehicle Insurance Pod 2 (FastAPI)"]
-        end
-
-        subgraph ObsNamespace [" observability Namespace "]
-            Prom["🔥 Prometheus (v2.48.1)"]
-            Graf["📊 Grafana (v10.2.2)"]
-        end
-
-        subgraph CWNamespace [" amazon-cloudwatch Namespace "]
-            CWAgent["🛡️ CloudWatch Agent DaemonSet"]
-            FBit["📝 Fluent-Bit Log Shipper DaemonSet"]
-        end
-    end
-
-    subgraph DataML [" Data & Artifact Layer "]
-        Mongo[("🍃 MongoDB Atlas")]
-        S3[("🪣 AWS S3 Model Registry")]
-        ECR["📦 AWS Elastic Container Registry (ECR)"]
-    end
-
-    subgraph CloudWatchLayer [" AWS CloudWatch "]
-        CWLog["📋 Log Groups (/aws/containerinsights)"]
-        CWMetrics["📈 Container Insights & Dashboards"]
-    end
-
-    User -->|HTTP / HTTPS| ALB
-    ALB --> K8sSvc
-    K8sSvc --> Pod1
-    K8sSvc --> Pod2
-
-    Pod1 & Pod2 <-->|Fetch Training Data| Mongo
-    Pod1 & Pod2 <-->|Download / Upload Models| S3
-
-    Prom -->|Scrape /metrics every 15s| Pod1 & Pod2
-    Prom -->|Scrape cAdvisor| Cluster
-    Graf -->|Datasource Proxy| Prom
-
-    FBit -->|Stream Stdout/Stderr| CWLog
-    CWAgent -->|Collect Resource Metrics| CWMetrics
-```
+### Step 3: Virtual Environment and Dependencies
+- Create a virtual environment and install required dependencies from `requirements.txt`:
+  ```bash
+  conda create -n vehicle python=3.10 -y
+  conda activate vehicle
+  pip install -r requirements.txt
+  ```
+- Verify the local packages by running:
+  ```bash
+  pip list
+  ```
 
 ---
 
-## 🔄 End-to-End MLOps Pipeline Flow
+## 📊 MongoDB Setup and Data Management
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Admin as ML Engineer / CI Trigger
-    participant API as FastAPI /train
-    participant Ingest as Data Ingestion
-    participant Valid as Data Validation
-    participant Trans as Data Transformation
-    participant Train as Model Trainer
-    participant Eval as Model Evaluation
-    participant Pusher as Model Pusher
-    participant S3 as AWS S3 Registry
-    participant Mongo as MongoDB Atlas
+### Step 4: MongoDB Atlas Configuration
+1. Sign up for [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) and create a new project.
+2. Set up a free M0 cluster, configure the username and password, and allow access from any IP address (`0.0.0.0/0`).
+3. Retrieve the MongoDB connection string for Python and save it (replace `<password>` with your password).
 
-    Admin->>API: POST /train
-    API->>Ingest: initiate_data_ingestion()
-    Ingest->>Mongo: Export collection to DataFrame
-    Mongo-->>Ingest: Raw Vehicle Insurance Records
-    Ingest-->>Valid: Train / Test CSV Artifacts
-
-    Valid->>Valid: Validate Schema & Drift (config/schema.yaml)
-    Valid-->>Trans: Validation Approved
-
-    Trans->>Trans: ColumnTransformer (OHE + Robust Scaler)
-    Trans-->>Train: Transformed NumPy Arrays + Preprocessor Object
-
-    Train->>Train: Train RandomForestClassifier with Entropy Criterion
-    Train-->>Eval: Candidate Model Artifact
-
-    Eval->>S3: Fetch Best Production Model
-    alt Candidate Score > Production Score + Threshold (0.02)
-        Eval-->>Pusher: Model Accepted (Score Exceeds Production)
-        Pusher->>S3: Upload Model & Preprocessor to Production S3 Key
-        Pusher-->>API: Deployment Complete
-    else Candidate Score <= Production Benchmark
-        Eval-->>API: Model Rejected (Production Model Retained)
-    end
-```
+### Step 5: Pushing Data to MongoDB
+1. Create a folder named `notebook`, add the dataset, and create a notebook file `mongoDB_demo.ipynb`.
+2. Use the notebook to push data to the MongoDB database.
+3. Verify the data in MongoDB Atlas under Database > Browse Collections.
 
 ---
 
-## 🛠️ Technology Stack
+## 📝 Logging, Exception Handling, and EDA
 
-| Domain | Technologies | Purpose |
-| :--- | :--- | :--- |
-| **Language & Runtime** | `Python 3.10 / 3.13`, `Uvicorn`, `ASGI` | Core application and pipeline environment |
-| **Machine Learning** | `scikit-learn`, `numpy`, `pandas`, `dill` | Feature pipelines, Random Forest training & serialization |
-| **Web Framework** | `FastAPI`, `Jinja2`, `Pydantic` | Async prediction APIs and interactive web interface |
-| **Database** | `MongoDB Atlas` | Cloud-hosted NoSQL store for raw training records |
-| **Containerization** | `Docker` | Multi-stage, reproducible microservice container builds |
-| **Cloud Infrastructure** | `AWS EKS 1.34`, `EC2 (t3.medium)`, `S3`, `ECR` | Highly scalable Kubernetes cluster, model registry & image repo |
-| **CI / CD** | `GitHub Actions`, `Pytest`, `AWS OIDC` | Automated unit tests, container builds, and rolling cluster deployments |
-| **Metrics & Observability** | `Prometheus`, `Grafana`, `prometheus-client` | Real-time metric scraping, latency monitoring, dashboard provision |
-| **Logging & Tracing** | `AWS CloudWatch`, `Fluent-Bit`, `OpenTelemetry` | Centralized log streaming and Container Insights host monitoring |
+### Step 6: Set Up Logging and Exception Handling
+- Create logging and exception handling modules. Test them on a demo file `demo.py`.
+
+### Step 7: Exploratory Data Analysis (EDA) and Feature Engineering
+- Analyze and engineer features in the `EDA` and `Feature Engg` notebook for further processing in the pipeline.
 
 ---
 
-## 📁 Repository Directory Structure
+## 📥 Data Ingestion
 
-```plaintext
-├── .github/
-│   └── workflows/
-│       └── ci-cd.yaml             # GitHub Actions automated build, test & deploy pipeline
-├── config/
-│   ├── model.yaml                 # RandomForest hyperparameters & evaluation thresholds
-│   └── schema.yaml                # Feature schema definitions (numerical, categorical, drop)
-├── k8s/
-│   └── observability/
-│       ├── alerts.yaml            # Prometheus AlertRules (Error rate, latency, MongoDB, OOM)
-│       ├── cloudwatch-dashboard.json # CloudWatch Container Insights infrastructure dashboard
-│       ├── grafana.yaml           # Grafana Deployment, Service & Provisioned MLOps Dashboard
-│       └── prometheus.yaml        # Prometheus RBAC, ConfigMap, Deployment & Service
-├── notebook/
-│   ├── data.csv                   # Raw training dataset benchmark
-│   └── mongoDB_demo.ipynb         # Data export and MongoDB Atlas connectivity notebook
-├── src/
-│   ├── cloud_storage/
-│   │   └── aws_storage.py         # S3 bucket read/write, model upload/download utility
-│   ├── components/
-│   │   ├── data_ingestion.py      # Extract data from MongoDB into train/test sets
-│   │   ├── data_validation.py     # Schema validation and data drift detection
-│   │   ├── data_transformation.py # Preprocessing pipeline (OneHotEncoder, MinMaxScaler)
-│   │   ├── model_trainer.py       # Random Forest model training and score evaluation
-│   │   ├── model_evaluation.py    # Champion vs. Challenger model evaluation on S3
-│   │   └── model_pusher.py        # Promotes accepted models into S3 production registry
-│   ├── configuration/
-│   │   ├── aws_connection.py      # Boto3 S3 client connection manager
-│   │   └── mongo_db_connection.py # PyMongo connection manager with metric error tracking
-│   ├── constants/                 # Centralized pipeline configurations and paths
-│   ├── entity/                    # Config entity and artifact entity dataclasses
-│   ├── observability/
-│   │   └── metrics.py             # Custom Prometheus Counters, Histograms, ASGI middleware
-│   ├── pipline/
-│   │   ├── prediction_pipeline.py # Production prediction pipeline from S3 model
-│   │   └── training_pipeline.py   # Full training pipeline orchestrator
-│   └── utils/
-│       └── main_utils.py          # YAML, pickle, and numpy serialization utilities
-├── static/
-│   └── css/
-│       └── style.css              # Modern glassmorphism UI styles
-├── templates/
-│   └── vehicledata.html           # Interactive HTML frontend with presets and dynamic controls
-├── tests/
-│   ├── test_basics.py             # Fundamental data conversion and FastAPI app tests
-│   └── test_observability.py      # /health, /ready, /metrics, latency, and counter test suite
-├── app.py                         # FastAPI web server entrypoint with observability endpoints
-├── deployment.yaml                # Kubernetes deployment with health probes and resource limits
-├── service.yaml                   # Kubernetes LoadBalancer service definition
-├── Dockerfile                     # Multi-stage Docker build recipe
-├── requirements.txt               # Application dependencies
-└── OBSERVABILITY.md               # Complete enterprise observability runbook
-```
+### Step 8: Data Ingestion Pipeline
+- Define MongoDB connection functions in `configuration.mongo_db_connections.py`.
+- Develop data ingestion components in the `data_access` and `components.data_ingestion.py` files to fetch and transform data.
+- Update `entity/config_entity.py` and `entity/artifact_entity.py` with relevant ingestion configurations.
+- Run `demo.py` after setting up MongoDB connection as an environment variable.
+
+### Setting Environment Variables
+- Set MongoDB URL:
+  ```bash
+  # For Bash
+  export MONGODB_URL="mongodb+srv://<username>:<password>...."
+  # For Powershell
+  $env:MONGODB_URL = "mongodb+srv://<username>:<password>...."
+  ```
+- **Note**: On Windows, you can also set environment variables through the system settings.
 
 ---
 
-## 📈 Production Observability Stack
+## 🔍 Data Validation, Transformation & Model Training
 
-The system incorporates full SRE-grade observability to guarantee zero blind spots:
+### Step 9: Data Validation
+- Define schema in `config.schema.yaml` and implement data validation functions in `utils.main_utils.py`.
 
-```
-                                  OBSERVABILITY
-                                        │
-                 ┌──────────────────────┼──────────────────────┐
-                 │                      │                      │
-                 ▼                      ▼                      ▼
-         AWS CloudWatch             Prometheus          Application Logs
-                 │                      │                      │
-                 ▼                      ▼                      ▼
-        Container Insights           Grafana            CloudWatch Logs
-        (Host/Pod CPU & RAM)   (MLOps Dashboards)      (Fluent-Bit JSON)
-```
+### Step 10: Data Transformation
+- Implement data transformation logic in `components.data_transformation.py` and create `estimator.py` in the `entity` folder.
 
-### 1. Prometheus Application Metrics (`/metrics`)
-All application metrics are exposed in Prometheus text format at `/metrics` via `prometheus-client`:
-
-- **`vehicle_insurance_prediction_requests_total`**: Counter tracking total prediction queries (labeled by `status=success|failure`).
-- **`vehicle_insurance_prediction_errors_total`**: Counter tracking total inference failures.
-- **`vehicle_insurance_prediction_latency_seconds`**: High-resolution Histogram observing inference execution time across 11 buckets (`0.01s` to `10.0s`).
-- **`vehicle_insurance_training_runs_total`**: Counter tracking total `/train` executions.
-- **`vehicle_insurance_training_failures_total`**: Counter tracking pipeline training failures.
-- **`vehicle_insurance_mongodb_errors_total`**: Counter capturing MongoDB Atlas connectivity and query errors.
-- **`vehicle_insurance_http_requests_total`**: HTTP request counter partitioned by method, endpoint, and status code.
-
-### 2. Pre-Configured Alerting Rules (`alerts.yaml`)
-Prometheus actively evaluates 6 production alert rules:
-1. `VehicleInsurancePodUnavailable`: Triggers if active pods drop below 1 for > 2 min.
-2. `HighPredictionErrorRate`: Triggers if prediction error rate exceeds 5% over 5 min.
-3. `HighPredictionLatency`: Triggers if P95 latency exceeds 1.0 second.
-4. `MongoDBErrorSpike`: Triggers if MongoDB query/connection failures spike.
-5. `ModelTrainingFailed`: Triggers if any `/train` execution terminates with an error.
-6. `HighContainerMemoryUsage`: Triggers if pod memory usage exceeds 85% of its limit.
-
-### 3. Grafana Enterprise Dashboard
-A pre-provisioned dashboard located in the **MLOps** folder presents:
-- **Prediction Request Rate**: Live throughput per status.
-- **Inference Latency Percentiles**: P50, P95, and P99 latency tracking.
-- **Model Training Runs & Failures**: 24-hour training success and failure cards.
-- **HTTP Request Volume by Endpoint**: Distribution of `/health`, `/ready`, `/predict`, `/train`.
-- **Database Health**: Real-time MongoDB error count.
-- **Resource Utilization**: Container CPU & Working Set Memory vs. Kubernetes Limits.
+### Step 11: Model Training
+- Define and implement model training steps in `components.model_trainer.py` using code from `estimator.py`.
 
 ---
 
-## 🚦 Kubernetes Health Probes & Reliability
+## 🌐 AWS Setup for Model Evaluation & Deployment
 
-The Kubernetes deployment (`deployment.yaml`) enforces production-safe orchestration:
+### Step 12: AWS Setup
+1. Log in to the AWS console, create an IAM user, and grant `AdministratorAccess`.
+2. Set AWS credentials as environment variables.
+   ```bash
+   # For Bash
+   export AWS_ACCESS_KEY_ID="YOUR_AWS_ACCESS_KEY_ID"
+   export AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_ACCESS_KEY"
+   ```
 
-```yaml
-livenessProbe:
-  httpGet:
-    path: /health
-    port: 5000
-  initialDelaySeconds: 20
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 3
+3. Configure S3 Bucket and add access keys in `constants.__init__.py`.
 
-readinessProbe:
-  httpGet:
-    path: /ready
-    port: 5000
-  initialDelaySeconds: 10
-  periodSeconds: 5
-  timeoutSeconds: 3
-  failureThreshold: 2
-
-resources:
-  requests:
-    cpu: "250m"
-    memory: "512Mi"
-  limits:
-    cpu: "1000m"
-    memory: "1.5Gi"
-```
-
-- **Liveness Probe (`/health`)**: Asks *"Is the container alive?"* If the process deadlocks, Kubernetes restarts the pod.
-- **Readiness Probe (`/ready`)**: Asks *"Is the application ready to handle user traffic?"* Ensures traffic is only routed after models and dependencies are loaded into memory.
-- **Resource Limits**: Prevents noisy-neighbor OOM crashes while guaranteeing baseline CPU and memory allocations.
+### Step 13: Model Evaluation and Pushing to S3
+- Create an S3 bucket named `my-model-mlopsproj` in the `us-east-1` region.
+- Develop code to push/pull models to/from the S3 bucket in `src.aws_storage` and `entity/s3_estimator.py`.
 
 ---
 
-## ⚡ API Endpoints
+## 🚀 Model Evaluation, Model Pusher, and Prediction Pipeline
 
-| Method | Endpoint | Description | Sample Response |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Web UI Interactive Prediction Dashboard | `HTML Form` |
-| `POST` | `/` | Form submission endpoint for single prediction | `HTML with Prediction Badge` |
-| `GET` | `/health` | Kubernetes Liveness Probe endpoint | `{"status":"healthy","service":"vehicle-insurance"}` |
-| `GET` | `/ready` | Kubernetes Readiness Probe endpoint | `{"status":"ready","model_loaded":true}` |
-| `GET` | `/metrics` | Prometheus Metrics Scrape endpoint | `Prometheus Exporter Format` |
-| `GET` | `/train` | Triggers background model training pipeline | `{"message":"Training pipeline completed successfully"}` |
+### Step 14: Model Evaluation & Model Pusher
+- Implement model evaluation and deployment components.
+- Create `Prediction Pipeline` and set up `app.py` for API integration.
+
+### Step 15: Static and Template Directory
+- Add `static` and `template` directories for web UI.
 
 ---
 
-## 🚀 Quickstart & Local Development
+## 🔄 CI/CD Setup with Docker, GitHub Actions, and AWS
 
-### Prerequisites
-- Python 3.10+
-- Docker & Docker Compose (optional)
-- AWS CLI configured with S3 permissions
-- MongoDB Atlas cluster URI
+### Step 16: Docker and GitHub Actions
+1. Create `Dockerfile` and `.dockerignore`.
+2. Set up GitHub Actions with AWS authentication by creating secrets in GitHub for:
+   - `AWS_ACCESS_KEY_ID`
+   - `AWS_SECRET_ACCESS_KEY`
+   - `AWS_DEFAULT_REGION`
+   - `ECR_REPO`
 
-### 1. Clone & Set Up Environment
-```bash
-# Clone the repository
-git clone https://github.com/Ishaan-Chaturved1/Vehicle-Insurance-Domain.git
-cd Vehicle-Insurance-Domain
+### Step 17: AWS EC2 and ECR
+1. Set up an EC2 instance for deployment.
+2. Install Docker on the EC2 machine.
+3. Connect EC2 as a self-hosted runner on GitHub.
 
-# Create and activate virtual environment
-python -m venv venv
-# On Windows:
-.\venv\Scripts\Activate.ps1
-# On Linux/macOS:
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### 2. Configure Environment Variables
-Create a `.env` file or export your credentials:
-```bash
-export MONGODB_URL="mongodb+srv://<user>:<password>@cluster.mongodb.net/?retryWrites=true&w=majority"
-export AWS_ACCESS_KEY_ID="your_aws_key_id"
-export AWS_SECRET_ACCESS_KEY="your_aws_secret_key"
-export AWS_DEFAULT_REGION="us-east-1"
-```
-
-### 3. Run Test Suite
-Verify that all unit and observability tests pass:
-```bash
-pytest -v
-```
-Output:
-```text
-tests/test_basics.py::test_constants PASSED                               [ 10%]
-tests/test_basics.py::test_vehicle_data_to_dataframe PASSED               [ 20%]
-tests/test_basics.py::test_fastapi_app_instance PASSED                    [ 30%]
-tests/test_observability.py::test_health_endpoint PASSED                  [ 40%]
-tests/test_observability.py::test_ready_endpoint PASSED                   [ 50%]
-tests/test_observability.py::test_metrics_endpoint_and_content PASSED     [ 60%]
-tests/test_observability.py::test_prediction_metrics_increment PASSED     [ 70%]
-tests/test_observability.py::test_prediction_error_metric_increment PASSED [ 80%]
-tests/test_observability.py::test_training_metrics_increment PASSED       [ 90%]
-tests/test_observability.py::test_mongodb_error_metric PASSED             [100%]
-============================== 10 passed in 10.82s ==============================
-```
-
-### 4. Start the Application Locally
-```bash
-python app.py
-```
-Visit `http://localhost:5000` in your browser.
+### Step 18: Final Steps
+1. Open the 5080 port on the EC2 instance.
+2. Access the deployed app by visiting `http://<public_ip>:5080`.
 
 ---
 
-## 🐳 Running with Docker
-
-```bash
-# Build the Docker image
-docker build -t vehicle-insurance:latest .
-
-# Run container with environment variables
-docker run -p 5000:5000 \
-  -e MONGODB_URL="${MONGODB_URL}" \
-  -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
-  -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
-  -e AWS_DEFAULT_REGION="us-east-1" \
-  vehicle-insurance:latest
-```
+## 🛠️ Additional Resources
+- **Crash Course on setup.py and pyproject.toml**: See `crashcourse.txt` for details.
+- **GitHub Secrets**: Manage secrets for secure CI/CD pipelines.
 
 ---
 
-## ☸️ Kubernetes & Observability Access
+## 🎯 Project Workflow Summary
 
-To view the in-cluster monitoring dashboards:
-
-```bash
-# Forward Grafana to localhost:3000
-kubectl port-forward svc/grafana 3000:3000 -n observability
-# Credentials -> Username: admin | Password: admin321
-
-# Forward Prometheus to localhost:9090
-kubectl port-forward svc/prometheus 9090:9090 -n observability
-
-# Forward Application directly (if not using LoadBalancer)
-kubectl port-forward svc/vehicle-insurance-service 5000:80 -n default
-```
+1. **Data Ingestion** ➔ **Data Validation** ➔ **Data Transformation**
+2. **Model Training** ➔ **Model Evaluation** ➔ **Model Deployment**
+3. **CI/CD Automation** with GitHub Actions, Docker, AWS EC2, and ECR
 
 ---
 
-## 🔄 CI/CD Automation Flow
-
-The repository utilizes **GitHub Actions** (`.github/workflows/ci-cd.yaml`) to automate production releases:
-
-1. **Continuous Integration (CI)**:
-   - Lint checks and executes the `pytest` test suite.
-   - Code changes are validated before any build step runs.
-2. **Containerization & Registry Push**:
-   - Securely assumes AWS IAM role via **AWS OIDC**.
-   - Builds multi-platform Docker image.
-   - Pushes version-tagged and `latest` images to **Amazon ECR**.
-3. **Continuous Deployment (CD)**:
-   - Connects to AWS EKS cluster (`my-eks-cluster`).
-   - Executes rolling deployment updates using `kubectl apply -f deployment.yaml`.
-   - Verifies rollout status using `kubectl rollout status deployment/vehicle-insurance`.
+## 💬 Connect
+If you found this project helpful or have any questions, feel free to reach out!
 
 ---
 
-## 👥 Author & Acknowledgements
-
-Developed by **[Ishaan Chaturvedi](https://github.com/Ishaan-Chaturved1)**  
-Feedback, contributions, and stars are always welcome! ⭐
-
----
-
-<div align="center">
-<sub>Built with precision for enterprise machine learning operations.</sub>
-</div>
+This README provides a structured walkthrough of the MLOps project, showcasing the end-to-end pipeline, cloud integration, CI/CD setup, and robust data handling capabilities.
